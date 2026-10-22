@@ -287,10 +287,10 @@ if (!gotLock) {
     } catch (error) {
       console.error('Could not start VIA Keyboard:', error);
       dialog.showErrorBox(
-        'VIA Keyboard 启动失败',
+        'VIA Keyboard failed to start',
         error?.code === 'EADDRINUSE'
-          ? `本机端口 ${APP_PORT} 已被占用。请关闭占用该端口的程序后重新启动。`
-          : '无法启动本地应用。请重新打包应用后再试。',
+          ? `Port ${APP_PORT} on this computer is already in use. Close the application using it and restart VIA Keyboard.`
+          : 'Unable to start the local application. Please rebuild the application and try again.',
       );
       app.quit();
     }
