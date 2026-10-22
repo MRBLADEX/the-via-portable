@@ -1,0 +1,19 @@
+appId: dev.via.keyboarddesktop
+productName: VIA Keyboard
+asar: true
+directories:
+  output: release
+files:
+  - dist/**/*
+  - electron/**/*
+  - package.json
+  - '!node_modules/**/*'
+win:
+  icon: public/android-chrome-512x512.png
+  signExecutable: false
+  target:
+    - target: portable
+      arch:
+        - x64
+portable:
+  artifactName: VIA-Keyboard-${version}-portable.${ext}

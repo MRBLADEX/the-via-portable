@@ -1,8 +1,14 @@
 {
+  "name": "via-keyboard-desktop",
+  "version": "1.0.0",
+  "main": "electron/main.cjs",
   "license": "GPL-3.0",
   "scripts": {
     "dev": "node scripts/build-definitions.js && vite --force",
     "build": "bun run build:kbs && tsc && vite build",
+    "build:desktop": "node scripts/build-definitions.js && tsc && vite build",
+    "build:portable": "bun run build:desktop && electron-builder --win portable --x64",
+    "desktop": "electron .",
     "format": "prettier --write \"src/**/*.{js,jsx,ts,tsx}\"",
     "lint": "prettier --check \"src/**/*.{js,jsx,ts,tsx}\"",
     "refresh-kbs": "bun update --force via-keyboards",
@@ -66,6 +72,8 @@
     "@types/wicg-file-system-access": "^2020.9.5",
     "@vitejs/plugin-react": "^3.1.0",
     "concurrently": "^7.6.0",
+    "electron": "^45.0.0",
+    "electron-builder": "^26.0.12",
     "husky": "^8.0.3",
     "tsx": "^4.21.0",
     "typescript": "^5.6.2",

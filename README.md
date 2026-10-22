@@ -41,6 +41,17 @@ You will also see any lint errors in the console.
 Builds a static copy of your site to the `build/` folder.
 Your app is ready to be deployed!
 
+### Windows portable desktop build
+
+The Windows desktop build packages the production UI and the keyboard definitions in `public/definitions` into a portable executable. It does not run the Vite development server after packaging. VIA's interface preferences are stored locally and persist between launches.
+
+```bash
+bun install
+bun run build:portable
+```
+
+The executable is written to `release/VIA-Keyboard-1.0.0-portable.exe`. The desktop build preserves an existing `public/definitions` folder so local keyboard definitions are included. If that folder is missing, the normal definition bootstrap runs first. The local portable build is unsigned, so Windows may show an unknown publisher warning if the file is shared with other people.
+
 #### `npm run test`
 
 Launches the application test runner.
