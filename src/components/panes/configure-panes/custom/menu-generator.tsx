@@ -34,6 +34,7 @@ import {
 } from 'src/store/menusSlice';
 import {useTranslation} from 'react-i18next';
 import {isCustomMenuCommandContent} from 'src/utils/custom-menu';
+import {translateDefinitionLabel} from 'src/utils/definition-label';
 
 type Category = {
   label: string;
@@ -181,7 +182,7 @@ function submenuGenerator(
 }
 
 export const Pane: React.FC<Props> = (props: any) => {
-  const {t} = useTranslation();
+  const {t, i18n} = useTranslation();
   const dispatch = useAppDispatch();
   const selectedDefinition = useAppSelector(getSelectedDefinition);
   const selectedCustomMenuData = useAppSelector(getSelectedCustomMenuData);
@@ -244,7 +245,11 @@ export const Pane: React.FC<Props> = (props: any) => {
                 cursor: menu.isHidden ? 'not-allowed' : 'pointer',
               }}
             >
-              {t(menu.label)}
+              {translateDefinitionLabel(
+                menu.label,
+                t,
+                i18n.resolvedLanguage ?? i18n.language,
+              )}
             </SubmenuRow>
           ))}
         </MenuContainer>

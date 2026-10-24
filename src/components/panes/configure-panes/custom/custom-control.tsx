@@ -11,6 +11,7 @@ import {ArrayColorPicker} from '../../../inputs/color-picker';
 import {ConnectedColorPalettePicker} from 'src/components/inputs/color-palette-picker';
 import {shiftFrom16Bit, shiftTo16Bit} from 'src/utils/keyboard-api';
 import {useTranslation} from 'react-i18next';
+import {translateDefinitionLabel} from 'src/utils/definition-label';
 import {
   decodeRangeValue,
   getRangeBounds,
@@ -35,10 +36,16 @@ type AdvancedControlProps = Props & {meta: ControlMeta};
 
 export const VIACustomItem = React.memo(
   (props: VIACustomControlProps & {_id: string}) => {
-    const {t} = useTranslation();
+    const {t, i18n} = useTranslation();
     return (
       <ControlRow id={props._id}>
-        <Label>{t(props.label)}</Label>
+        <Label>
+          {translateDefinitionLabel(
+            props.label,
+            t,
+            i18n.resolvedLanguage ?? i18n.language,
+          )}
+        </Label>
         <Detail>
           {'type' in props ? (
             <VIACustomControl
