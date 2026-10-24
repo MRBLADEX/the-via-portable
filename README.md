@@ -1,76 +1,42 @@
-# [VIA Web Application](https://usevia.app) - Your keyboards best friend
+# VIA Keyboard
 
-![android-chrome-192x192](https://user-images.githubusercontent.com/1714072/222621960-ddfb8ee6-a486-4c66-8852-b204ba7c807b.png)
+**Language:** English | [简体中文](README.zh-CN.md)
 
-[![Azure Static Web Apps CI/CD](https://github.com/the-via/app/actions/workflows/azure.yml/badge.svg)](https://github.com/the-via/app/actions/workflows/azure.yml)
+**Official upstream repository:** [github.com/the-via/app](https://github.com/the-via/app)
 
-VIA is a powerful, open-source web-based interface for configuring your [QMK](https://qmk.fm)-powered mechanical keyboard. It allows you to customize your keymaps, create macros, and adjust RGB settings (if it has RGB) on the fly, without needing to recompile your keyboard's firmware. This makes keyboard customization easier and more accessible for everyone.
+This project is based on VIA's open-source web application for configuring [QMK](https://qmk.fm) keyboards. This fork adds an Electron desktop wrapper that builds as a Windows x64 Portable executable. The browser-based development workflow remains available.
 
-## Getting VIA to support your keyboard
+## Keyboard definitions
 
-Are you a keyboard maker or a developer interested in adding support for your keyboard? We welcome contributions to the VIA project!
+The app reads its bundled keyboard definitions from `public/definitions/`. The folder normally contains `supported_kbs.json`, `hash.json`, and the `v2/` and `v3/` definition directories. It is git-ignored and is included in local builds when present.
 
-1. The source code of the keyboard **has to be merged** in [QMK Firmware Repositories](https://github.com/qmk/qmk_firmware) Master branch.
-2. Your `keymaps/via` keymap **has to be merged** in [VIA's QMK Userspace Repository](https://github.com/the-via/qmk_userspace_via) Main branch.
-3. Create a definition in JSON format for your keyboard and submit it as a pull request to [VIA's Keyboards Repository](https://github.com/the-via/keyboards) Master branch.
+If `public/definitions/` is missing, the development and desktop build scripts bootstrap the standard definitions. If you have a local definitions bundle, place it at `public/definitions/` before building. For one-off testing, sideload a VIA-compatible V2 or V3 definition JSON through **Settings → Show Design tab → Design → Load Draft Definition**. A definition loaded this way is saved in the app's local profile; it is not added to the executable or written to the keyboard. To bundle a definition for future builds, add it to the matching `v2/` or `v3/` directory, update `supported_kbs.json` and `hash.json`, then rebuild.
 
-Please follow our [Specification documentation](https://www.caniusevia.com/docs/specification) carefully to ensure your pull request is smoothly reviewed and merged.
+## Run in a web browser
 
-## Local development setup
-
-Start by cloning [`the-via/keyboards`](github.com/the-via/keyboards) then install dependencies with `npm install` and finally `npm run build`. You should see
-the output folder `dist`. This should be copied or symlinked to our repo's `public/definitions` folder.
+Install dependencies and start the Vite development server:
 
 ```bash
-# Inside the-via/app
-public/definitions -> ../../keyboards/dist
+bun install
+bun run dev
 ```
 
-### Useful commands
+Open [http://localhost:5173](http://localhost:5173). The development server bootstraps standard definitions if `public/definitions/` does not already exist.
 
-#### `npm run dev`
+## Run in Electron during development
 
-Runs the app in the development mode.
-Open [http://localhost:5173](http://localhost:5173) to view it in the browser.
+Build the desktop UI, then launch Electron:
 
-The page will reload if you make edits.
-You will also see any lint errors in the console.
+```bash
+bun run build:desktop
+bun run desktop
+```
 
-#### `npm run build`
-
-Builds a static copy of your site to the `build/` folder.
-Your app is ready to be deployed!
-
-### Windows portable desktop build
-
-The Windows desktop build packages the production UI and the keyboard definitions in `public/definitions` into a portable executable. It does not run the Vite development server after packaging. VIA's interface preferences are stored locally and persist between launches.
+## Build the Windows Portable executable
 
 ```bash
 bun install
 bun run build:portable
 ```
 
-The executable is written to `release/VIA-Keyboard-1.0.0-portable.exe`. The desktop build preserves an existing `public/definitions` folder so local keyboard definitions are included. If that folder is missing, the normal definition bootstrap runs first. The local portable build is unsigned, so Windows may show an unknown publisher warning if the file is shared with other people.
-
-#### `npm run test`
-
-Launches the application test runner.
-Run with the `--watch` flag (`npm test -- --watch`) to run in interactive watch mode.
-
----
-
-This project is tested with [BrowserStack](https://www.browserstack.com/).
-
-## Looking for an offline app?
-
-@cebby2420 has kindly made a desktop app that does so.
-
-You can find it at [https://github.com/cebby2420/via-desktop](https://github.com/cebby2420/via-desktop).
-
-**NOTE: This project has no official affiliation with VIA, and we cannot provide support for it.**
-
-## Facing Issues?
-
-If you encounter any issues or bugs while using the [VIA web application](https://usevia.app), please report them by opening an issue in the [Issues section](https://github.com/the-via/app/issues). This will help us to track down and resolve problems, and improve the VIA experience for everyone.
-
-Before reporting, please make sure to check if an issue has already been reported. Thank you!
+The build packages the production UI and the definitions in `public/definitions/`; it does not start the Vite development server. The executable is written to `release/VIA-Keyboard-1.0.0-portable.exe`. The build is unsigned, so Windows may show an unknown publisher warning.
