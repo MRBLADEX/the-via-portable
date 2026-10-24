@@ -1,4 +1,5 @@
-const {app, BrowserWindow, dialog, session, shell} = require('electron');
+const {app, BrowserWindow, dialog, ipcMain, session, shell} = require('electron');
+const {randomUUID} = require('node:crypto');
 const fs = require('node:fs');
 const fsp = require('node:fs/promises');
 const http = require('node:http');
@@ -35,6 +36,10 @@ let appOrigin;
 let staticServer;
 let savedDeviceIds = new Set();
 let permissionFile;
+const pendingHidSelections = new Map();
+
+const HID_DEVICE_REQUEST_CHANNEL = 'via:hid-device-request';
+const HID_DEVICE_SELECTION_CHANNEL = 'via:hid-device-selection';
 
 const hasAppOrigin = (origin) => {
   try {
@@ -160,8 +165,6 @@ const startStaticServer = () =>
     });
   });
 
-const formatDeviceId = (id) => `0x${id.toString(16).padStart(4, '0')}`;
-
 const configureHIDPermissions = () => {
   const appSession = session.defaultSession;
 
@@ -179,46 +182,82 @@ const configureHIDPermissions = () => {
       savedDeviceIds.has(device.deviceId),
   );
 
+  ipcMain.on(HID_DEVICE_SELECTION_CHANNEL, (ipcEvent, selection) => {
+    if (
+      ipcEvent.sender !== mainWindow?.webContents ||
+      typeof selection?.requestId !== 'string' ||
+      !(typeof selection.deviceId === 'string' || selection.deviceId === null)
+    ) {
+      return;
+    }
+
+    const pending = pendingHidSelections.get(selection.requestId);
+    if (!pending) return;
+
+    pendingHidSelections.delete(selection.requestId);
+    if (
+      selection.deviceId !== null &&
+      !pending.deviceIds.has(selection.deviceId)
+    ) {
+      pending.callback();
+      return;
+    }
+
+    if (selection.deviceId === null) {
+      pending.callback();
+      return;
+    }
+
+    void saveDevicePermission(selection.deviceId)
+      .then(() => pending.callback(selection.deviceId))
+      .catch((error) => {
+        console.error('Could not save HID device permission:', error);
+        pending.callback();
+      });
+  });
+
   appSession.on('select-hid-device', (event, details, callback) => {
     event.preventDefault();
     const devices = (details.deviceList ?? []).filter(
       (device) => device.deviceId,
     );
-    if (!hasAppOrigin(details.origin) || devices.length === 0) {
+    if (
+      !hasAppOrigin(details.frame?.url) ||
+      devices.length === 0 ||
+      !mainWindow ||
+      mainWindow.webContents.isDestroyed()
+    ) {
       callback();
       return;
     }
 
-    const buttons = devices.map(
-      (device) =>
-        `${device.name || '未命名 HID 设备'} (VID ${formatDeviceId(device.vendorId)}, PID ${formatDeviceId(device.productId)})`,
-    );
-    const cancelId = buttons.length;
-    buttons.push('取消');
+    // A new request replaces any chooser that was left open by an earlier call.
+    for (const [requestId, pending] of pendingHidSelections) {
+      pendingHidSelections.delete(requestId);
+      pending.callback();
+    }
 
-    void dialog
-      .showMessageBox(mainWindow, {
-        type: 'question',
-        title: '选择键盘',
-        message: '选择要授权给 VIA Keyboard 的 HID 设备：',
-        buttons,
-        cancelId,
-        defaultId: 0,
-        noLink: true,
-      })
-      .then(async ({response}) => {
-        const selectedDevice = devices[response];
-        if (!selectedDevice) {
-          callback();
-          return;
-        }
-        await saveDevicePermission(selectedDevice.deviceId);
-        callback(selectedDevice.deviceId);
-      })
-      .catch((error) => {
-        console.error('HID device selection failed:', error);
-        callback();
+    const requestId = randomUUID();
+    pendingHidSelections.set(requestId, {
+      callback,
+      deviceIds: new Set(devices.map((device) => device.deviceId)),
+    });
+
+    try {
+      mainWindow.webContents.send(HID_DEVICE_REQUEST_CHANNEL, {
+        requestId,
+        devices: devices.map((device) => ({
+          deviceId: device.deviceId,
+          name: device.name,
+          vendorId: device.vendorId,
+          productId: device.productId,
+        })),
       });
+    } catch (error) {
+      pendingHidSelections.delete(requestId);
+      console.error('Could not display HID device selection:', error);
+      callback();
+    }
   });
 };
 
@@ -245,6 +284,7 @@ const createWindow = async (url) => {
       contextIsolation: true,
       nodeIntegration: false,
       sandbox: true,
+      preload: path.join(__dirname, 'preload.cjs'),
     },
   });
 
@@ -260,6 +300,10 @@ const createWindow = async (url) => {
   });
   mainWindow.once('ready-to-show', () => mainWindow.show());
   mainWindow.on('closed', () => {
+    for (const pending of pendingHidSelections.values()) {
+      pending.callback();
+    }
+    pendingHidSelections.clear();
     mainWindow = undefined;
   });
 

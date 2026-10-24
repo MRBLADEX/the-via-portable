@@ -1,5 +1,9 @@
 {
   "Authorize device": "选择键盘",
+  "Select a device": "选择设备",
+  "Choose the keyboard or HID device to connect to VIA.": "选择要连接到 VIA 的键盘或 HID 设备。",
+  "Unknown HID device": "未命名 HID 设备",
+  "VID {{vid}} · PID {{pid}}": "厂商 ID {{vid}} · 产品 ID {{pid}}",
   "Configure": "配置",
   "Key Tester": "键盘测试",
   "Settings": "设置",

@@ -13,6 +13,7 @@ import {getRenderMode, getShowConsoleTab} from './store/settingsSlice';
 import {useLocation} from 'wouter';
 import {HIDConsole} from './components/panes/hid-console';
 import styled from 'styled-components';
+import {ElectronHidDevicePicker} from './components/inputs/electron-hid-device-picker';
 
 const GlobalStyle = createGlobalStyle`
   *:focus {
@@ -48,6 +49,7 @@ export default () => {
     <>
         <TestContext.Provider value={testContextState}>
           <GlobalStyle />
+          <ElectronHidDevicePicker />
           {hasHIDSupport && <UnconnectedGlobalMenu />}
           <CanvasRouter />
 

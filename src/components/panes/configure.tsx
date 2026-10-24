@@ -38,7 +38,6 @@ import {reloadConnectedDevices} from 'src/store/devicesThunks';
 import {getV3MenuComponents} from 'src/store/menusSlice';
 import {getIsMacroFeatureSupported} from 'src/store/macrosSlice';
 import {getConnectedDevices, getSupportedIds} from 'src/store/devicesSlice';
-import {isElectron} from 'src/utils/running-context';
 import {useAppDispatch} from 'src/store/hooks';
 import {MenuTooltip} from '../inputs/tooltip';
 import {getRenderMode, getSelectedTheme} from 'src/store/settingsSlice';
@@ -201,7 +200,8 @@ const Loader: React.FC<{
     <LoaderPane>
       {<ChippyLoader theme={theme} progress={loadProgress || null} />}
 
-      {(showButton || noConnectedDevices) && !noSupportedIds && !isElectron ? (
+      {/* WebHID permission requests require a user gesture, including in Electron. */}
+      {(showButton || noConnectedDevices) && !noSupportedIds ? (
         <AccentButtonLarge onClick={() => dispatch(reloadConnectedDevices())}>
           {t('Authorize device')}
           <FontAwesomeIcon style={{marginLeft: '10px'}} icon={faPlus} />
